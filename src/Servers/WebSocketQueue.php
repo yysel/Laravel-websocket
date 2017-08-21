@@ -169,9 +169,6 @@ class WebSocketQueue implements QueueContract
      */
     public function pop($queue = null)
     {
-        if (!$GLOBALS['ttt']) $GLOBALS['ttt'] = 1;
-        $GLOBALS['ttt'] = $GLOBALS['ttt'] + 1;
-        //var_dump($GLOBALS['ttt']);
         $job = $this->socket->read();
         if (!is_null($job)) {
            if(class_exists('App\Jobs\WebSocketSJob',false)) new App\Jobs\WebSocketSJob($this->socket, $job);
@@ -216,7 +213,7 @@ class WebSocketQueue implements QueueContract
      */
     protected function makeDelayHeader($delay)
     {
-        dd(123);
+
         $delay = $this->getSeconds($delay);
         if ($this->system == self::SYSTEM_ACTIVEMQ) {
             return ['AMQ_SCHEDULED_DELAY' => $delay * 1000];
@@ -227,7 +224,7 @@ class WebSocketQueue implements QueueContract
 
     public function getConnectionName()
     {
-        dd(125);
+
     }
 
     /**
