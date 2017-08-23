@@ -2,48 +2,9 @@
 
 namespace Kitty\WebSocket\Socket;
 
-/*
-创建类websocket($config);
-$config结构:
-$config=array(
-  'address'=>'192.168.0.200',//绑定地址
-  'port'=>'8000',//绑定端口
-  'event'=>'WSevent',//回调函数的函数名
-  'log'=>true,//命令行显示记录
-);
-
-回调函数返回数据格式
-function WSevent($type,$event)
-
-$type字符串 事件类型有以下三种
-in  客户端进入
-out 客户端断开
-msg 客户端消息到达
-均为小写
-
-$event 数组
-$event['k']内置用户列表的userid;
-$event['sign']客户标示
-$event['msg']收到的消息 $type='msg'时才有该信息
-
-方法:
-run()运行
-search(标示)遍历取得该标示的id
-close(标示)断开连接
-write(标示,信息)推送信息
-idwrite(id,信息)推送信息
-
-属性:
-$users 客户列表
-结构:
-$users=array(
-[用户id]=>array('socket'=>[标示],'hand'=[是否握手-布尔值]),
-[用户id]=>arr.....
-)
-*/
 
 
-use App\Jobs\Frame;
+use Kitty\WebSocket\Socket\Frame;
 
 class WebSocket
 {
@@ -273,7 +234,6 @@ class WebSocket
 
     protected function manager($type, $key, $socket, $buffer)
     {
-        var_dump($buffer);
         return new Frame($type, $key, $socket, $buffer);
     }
 
