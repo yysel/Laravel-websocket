@@ -3,6 +3,7 @@
 namespace Kitty\WebSocket\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Kitty\WebSocket\Helper\ManagerCommand;
 use Kitty\WebSocket\Servers\WebSocketConnector;
 
 class WebSocketServiceProvider extends ServiceProvider
@@ -31,6 +32,10 @@ class WebSocketServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $this->app->singleton('command.websocket.manager', function () {
+            return new ManagerCommand();
+        });
+        $this->commands('command.websocket.manager');
     }
 
     /**

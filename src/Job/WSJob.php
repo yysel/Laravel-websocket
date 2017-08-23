@@ -31,7 +31,7 @@ class WSJob extends Job implements JobContract
            $this->broadcast('用户id '. $frame->key.': 进入频道');
         } elseif ('out' == $frame->type) {
             $this->console('用户id '. $frame->key.' : 退出频道');
-           $this->broadcast('用户id '. $frame->key.': 进入频道');
+           $this->broadcast('用户id '. $frame->key.': 退出频道');
         } elseif ('msg' == $frame->type) {
             $this->broadcast('用户id '. $frame->key. ' 消息: ' . $frame->message);
             $this->console('用户id '. $frame->key. ' 消息: ' . $frame->message);

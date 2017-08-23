@@ -106,10 +106,16 @@ class WebSocket
                     return new Frame('out', $k, $sign);
                 }
                 if (!$this->users[$k]['hand']) {//没有握手进行握手
-                    $this->handshake($k, $buffer);
-                    if ($res = $this->isAdmin($buffer)) $this->users[$k]['type'] = 'admin';
+                    if ($res = $this->isAdmin($buffer)){
+                        $this->users[$k]['type'] = 'admin';
+                        $this->users[$k]['hand'] = true;
+                        $this->sendToAdmin($sign,'OK');
+                    } else $this->handshake($k, $buffer);
                     return new Frame('in', $k, $sign);
-                }else{
+                } else {
+                    if ($this->users[$k]['type'] == 'admin') {
+                        return $this->manager('msg', $k, $sign, $buffer);
+                    }
                     $buffer = $this->decode($buffer);
                     return new Frame('msg', $k, $sign, $buffer);
                 }
@@ -117,6 +123,8 @@ class WebSocket
             }
         }
     }
+
+
 
     public function checkSocket($client)
     {
@@ -249,6 +257,11 @@ class WebSocket
         return socket_write($socket, $msg, strlen($msg));
     }
 
+    public function sendToAdmin($socket,$buffer)
+    {
+        return socket_write($socket, $buffer, strlen($buffer));
+    }
+
     public function broadcast($msg)
     {
         foreach ($this->users as $user) {
@@ -256,6 +269,12 @@ class WebSocket
                 $this->send(@$user['socket'], $msg);
             }
         }
+    }
+
+    protected function manager($type, $key, $socket, $buffer)
+    {
+        var_dump($buffer);
+        return new Frame($type, $key, $socket, $buffer);
     }
 
     public function console($msg)

@@ -161,17 +161,11 @@ class WebSocketQueue implements QueueContract
         return $this->pushRaw($payload, $queue, $this->makeDelayHeader($delay));
     }
 
-    /**
-     * Pop the next job off of the queue.
-     *
-     * @param  string $queue
-     * @return WSJob
-     */
     public function pop($queue = null)
     {
         $job = $this->socket->read();
         if (!is_null($job)) {
-           if(class_exists('App\Jobs\WebSocketSJob',false)) new App\Jobs\WebSocketSJob($this->socket, $job);
+           if(class_exists('\App\Jobs\WebSocketJob',true)) return new \App\Jobs\WebSocketJob($this->socket, $job);
            return new  WSJob($this->socket, $job);
         }
     }
