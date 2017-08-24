@@ -57,4 +57,13 @@ class SocketManager
         return true;
     }
 
+    public function read()
+    {
+        while (true) {
+            if(socket_last_error($this->socket))return null;
+            socket_recv($this->socket, $buffer, 2048, 0);
+            if($buffer)return $buffer;
+        }
+    }
+
 }

@@ -3,18 +3,18 @@
 namespace Kitty\WebSocket\Socket;
 
 
-
-use Kitty\WebSocket\Socket\Frame;
-
 class WebSocket
 {
     public $console;
     public $event;
     public $signets;
-    public $users;
+    public $users = [];
+    public $count = 0;
     public $master;
-    public $except = [
-        '192.168.1.102'
+
+    public $except = [];
+    public $method_array = [
+        'send', 'broadcast', 'close'
     ];
 
     public function __construct($config)
@@ -47,35 +47,40 @@ class WebSocket
         foreach ($changes as $k => $sign) {
             if ($sign == $this->master) {
                 $client = socket_accept($this->master);
+                var_dump($client);
                 if (!($client_ip = $this->checkSocket($client))) {
+
                     $this->close($client);
                 }
                 $this->sockets[] = $client;
                 $user = array(
+                    'key' => $this->count,
                     'socket' => $client,
                     'hand' => false,
                     'ip' => $client_ip['ip'],
                     'port' => $client_ip['port'],
                     'type' => 'user',
                 );
-                $this->users[] = $user;
+                $this->users[$this->count] = $user;
+                $this->count++;
             } else {
                 $len = socket_recv($sign, $buffer, 2048, 0);
                 $k = $this->search($sign);
-                if ($len < 7) {
+                if ($len < 7 && $this->users[$k]['type']=='user') {
                     $this->close($sign);
                     return new Frame('out', $k, $sign);
                 }
                 if (!$this->users[$k]['hand']) {//没有握手进行握手
-                    if ($res = $this->isAdmin($buffer)){
+                    if ($res = $this->isAdmin($buffer)) {
+                        $this->users[$k]['ip'] = '0.0.0.0';
                         $this->users[$k]['type'] = 'admin';
                         $this->users[$k]['hand'] = true;
-                        $this->sendToAdmin($sign,'OK');
+                        $this->sendToAdmin($sign, 'OK');
                     } else $this->handshake($k, $buffer);
                     return new Frame('in', $k, $sign);
                 } else {
                     if ($this->users[$k]['type'] == 'admin') {
-                        return $this->manager('msg', $k, $sign, $buffer);
+                        return $this->manager('admin', $k, $sign, $buffer);
                     }
                     $buffer = $this->decode($buffer);
                     return new Frame('msg', $k, $sign, $buffer);
@@ -84,7 +89,6 @@ class WebSocket
             }
         }
     }
-
 
 
     public function checkSocket($client)
@@ -108,11 +112,26 @@ class WebSocket
     }
 
     public function close($sign)
-    {//通过标示断开连接
-        $k = array_search($sign, $this->sockets);
-        socket_close($sign);
-        if ($this->sockets[$k]) unset($this->sockets[$k]);
-        if ($this->users[$k]) unset($this->users[$k]);
+    {
+        if (is_resource($sign)) {
+            $socket = $sign;
+            $key = array_search($sign, $this->sockets);
+        } else {
+            $socket = $this->sockets[$sign]['socket'];
+            $key = $sign;
+        }
+        socket_close($socket);
+        if ($this->sockets[$key]) unset($this->sockets[$key]);
+        if ($this->users[$key]) unset($this->users[$key]);
+        return true;
+    }
+
+    public function closeByIp($ip)
+    {
+        $users = collect($this->users)->where('ip', '=', $ip)->toArray();
+        foreach ($users as $user) {
+            $this->close($user['key']);
+        }
         return true;
     }
 
@@ -218,7 +237,7 @@ class WebSocket
         return socket_write($socket, $msg, strlen($msg));
     }
 
-    public function sendToAdmin($socket,$buffer)
+    public function sendToAdmin($socket, $buffer)
     {
         return socket_write($socket, $buffer, strlen($buffer));
     }
@@ -226,7 +245,7 @@ class WebSocket
     public function broadcast($msg)
     {
         foreach ($this->users as $user) {
-            if (@$user['socket']) {
+            if (@$user['socket'] && $user['type'] !== 'admin') {
                 $this->send(@$user['socket'], $msg);
             }
         }
@@ -234,7 +253,47 @@ class WebSocket
 
     protected function manager($type, $key, $socket, $buffer)
     {
-        return new Frame($type, $key, $socket, $buffer);
+        $order = $this->enOrder($buffer);
+        $method = reset($order);
+        $param = next($order);
+        $param_two = next($order);
+        $data = '';
+        switch ($method) {
+            case 'broadcast':
+                $this->broadcast($param);
+                break;
+            case 'show':
+                $data = $this->show();
+                break;
+            case 'close':
+                if($param=='-ip') $this->closeByIp($param_two);
+                else $this->close($param);
+                break;
+            default :
+                $method = 'null';
+                break;
+        }
+        $msg = [
+            'type' => $method,
+            'data' => $data,
+        ];
+        $this->sendToAdmin($socket, json_encode($msg));
+        return false;
+    }
+
+    protected function enOrder($buffer)
+    {
+        $buffer = explode(' ', $buffer);
+        foreach ($buffer as $key => $item) if (empty($item)) unset($buffer[$key]);
+        return $buffer;
+    }
+
+    public function show()
+    {
+        return collect($this->users)->map(function ($it) {
+            return collect($it)->only(['key', 'ip', 'type']);
+        })->values()->toArray();
+
     }
 
     public function console($msg)

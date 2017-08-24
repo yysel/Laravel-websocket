@@ -164,7 +164,7 @@ class WebSocketQueue implements QueueContract
     public function pop($queue = null)
     {
         $job = $this->socket->read();
-        if (!is_null($job)) {
+        if (!is_null($job) && $job instanceof Frame) {
            if(class_exists('\App\Jobs\WebSocketJob',true)) return new \App\Jobs\WebSocketJob($this->socket, $job);
            return new  WSJob($this->socket, $job);
         }

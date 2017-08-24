@@ -42,10 +42,32 @@ class ManagerCommand extends Com
         $manager = new SocketManager();
         echo $this->out("正在连接。。。");
         $manager->connect();
+        $notice="===================WebSocket进程控制台=========================";
+        $status=true;
         while (true) {
-            $switch = $this->ask($this->out("WebSocket进程控制台"));
-            $manager->send($this->in($switch));
+            $switch = $this->ask($this->out($notice));
             if ($switch == '\q') break;
+            if(!$status) break;
+            $manager->send($this->in($switch));
+            $status=$this->sayToSocket($manager);
+        }
+    }
+
+    public function sayToSocket($manager)
+    {
+        if($buffer=$manager->read()){
+            $res= json_decode($buffer,true);
+            switch ($res['type']){
+                case 'show':
+                    $arr=['key','ip','type'];
+                    $this->table($arr, $res['data']);
+                    break;
+                default :
+                    continue;
+                    break;
+            }
+            if($buffer=='close')return false;
+            return true;
         }
     }
 
