@@ -3,17 +3,17 @@
 namespace Kitty\WebSocket\Helper;
 
 use Illuminate\Console\Command as Com;
-use Kitty\WebSocket\Socket\SocketManager;
+use \Kitty\WebSocket\Helper\FillHelper;
 
 
-class RunCommand extends Com
+class MakeJobCommand extends Com
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'socket:run';
+    protected $signature = 'socket:make {job}';
 
     /**
      * The console command description.
@@ -39,9 +39,8 @@ class RunCommand extends Com
      */
     public function handle()
     {
-        $this->call('queue:work', [
-            'connection'=>'websocket'
-        ]);
+        $maker= new FillHelper();
+        $maker->makeJob();
     }
 
 }

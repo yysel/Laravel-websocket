@@ -3,7 +3,9 @@
 namespace Kitty\WebSocket\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Kitty\WebSocket\Helper\MakeJobCommand;
 use Kitty\WebSocket\Helper\ManagerCommand;
+use Kitty\WebSocket\Helper\RunCommand;
 use Kitty\WebSocket\Servers\WebSocketConnector;
 
 class WebSocketServiceProvider extends ServiceProvider
@@ -35,7 +37,15 @@ class WebSocketServiceProvider extends ServiceProvider
         $this->app->singleton('command.websocket.manager', function () {
             return new ManagerCommand();
         });
+        $this->app->singleton('command.websocket.run', function () {
+            return new RunCommand();
+        });
+        $this->app->singleton('command.websocket.make', function () {
+            return new MakeJobCommand();
+        });
         $this->commands('command.websocket.manager');
+        $this->commands('command.websocket.run');
+        $this->commands('command.websocket.make');
     }
 
     /**

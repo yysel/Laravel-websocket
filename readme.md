@@ -52,21 +52,48 @@
 ## 二、开启服务
 
 ```php
-      'paths' => [
-            resource_path('views'),
-            base_path()
-        ],
+     php artisan socket:run
 ```
 
+​	上述命令会开启一个常驻内存的socket进程 ，并监听上一步骤配置项的地址与端口，来处理websocket请求。
 
-## 4、提取配置文件：
+
+
+## 三、创建事件响应器
+
+​	1、一旦服务启动，每个socket请求都将会被kitty/websocket响应到`\App\Job\WebSocketJob`类中，所以你可以在这个类中，按照你的业务逻辑来处理这些请求。
+
+​	2、你可以通过命令`php artisan socket:make job` 来快速的在app/Jobs目录下创建事件处理类`WebSocketJob` ,`kitty/websocket`已经为你解决了继承关系，并生成了示例代码。
+
+
+
+## 四、事件响应
+
+​	如上所述，`kitty/websocket`的事件响应代码都放置在了app/Jobs/WebSocketJob.php中。共包括五种事件类型：
+
+​	1、用户建立连接时，响应  login() 事件；
+
+​	2、用户断开连接时，响应logout()事件；
+
+​	3、用户发送消息时，响应massage()事件；
+
+​	4、接收到管理进程(SocketManager)指令时，响应manager()事件；
+
+​	5、timer()事件，用来响应定时任务
+
+​	
+
+##五、进程管理（SoketManager）
+
+​	进程管理是kitty/websocket的特色功能，提供了强大进程管理、进程监控的能力，除此之外，借助SoketManager还可以在项目任意一处代码中实现WebServer与SocketServer的通信。
 
 ```composer
-    在命令行执行：php artisan vendor:publish
+    进入进程管理控制台：php artisan socket:manager
 ```
 
 
-## 5、修改默认配置（可选）
+
+## 六、API
 
    * 打开项目根目录下的config目录下的slice.php。
    * 修改core配置项下的name与path,其中name是项目组目录名，你未来所创建的所有目录都将放在这里，默认是Core;path是项目组所在路径默认放在根目录的app下。
