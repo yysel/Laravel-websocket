@@ -83,7 +83,7 @@
 
 ​	
 
-##五、进程管理（SoketManager）
+## 五、进程管理（SoketManager）
 
 ​	进程管理是kitty/websocket的特色功能，提供了强大进程管理、进程监控的能力，除此之外，借助SoketManager还可以在项目任意一处代码中实现WebServer与SocketServer的通信。
 
