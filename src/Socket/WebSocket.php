@@ -47,7 +47,6 @@ class WebSocket
         foreach ($changes as $k => $sign) {
             if ($sign == $this->master) {
                 $client = socket_accept($this->master);
-                var_dump($client);
                 if (!($client_ip = $this->checkSocket($client))) {
 
                     $this->close($client);
