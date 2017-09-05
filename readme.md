@@ -11,7 +11,7 @@
 
 ## 一、安装与配置： 
 
-###（一）安装
+### （一）安装
 
 ```composer
     在命令行执行：composer require kitty/websocket
@@ -36,7 +36,7 @@
 ]
 ```
 
-###（三）添加服务提供者
+### （三）添加服务提供者
 
 ​	修改``/config/app.php``文件下的'providers'数组内如下：
 
