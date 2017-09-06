@@ -26,7 +26,7 @@
                 log("现已连接");
                 return ;
             }
-            url = "ws://192.168.1.107:2000";
+            url = "ws://192.168.1.116:2000";
             if ('WebSocket' in window) {
                 ws = new WebSocket(url);
             } else if ('MozWebSocket' in window) {
@@ -41,10 +41,6 @@
                 //设置发信息送类型为：ArrayBuffer
                 ws.binaryType = "arraybuffer";
 
-                //发送一个字符串和一个二进制信息  
-                ws.send("thank you for accepting this WebSocket request");
-//                var a = new Uint8Array([8, 6, 7, 5, 3, 0, 9]);
-//                ws.send(a.buffer);
             }
             ws.onmessage = function(e) {
                 log(e.data.toString());
@@ -76,13 +72,6 @@
                     ws.send(document.getElementById("inputMessage").value);
                 }
             }
-            //停止心跳信息  
-            document.getElementById("stopButton").onclick = function() {
-                if (ws != null) {
-                    var a = new Uint8Array([1, 9, 2, 0, 1, 5, 1, 6]);
-                    ws.send(a.buffer);
-                }
-            }
         }
     </script>
 </head>
@@ -90,7 +79,7 @@
 <div>连接状态：<span id="socketstatus"></span></div>
 <div>
     <input type="text" id="inputMessage" value="Hello, WebSocket!">
-    <button id="sendButton">发送</button><button id="stopButton" style="margin-left:15px">停止心跳信息</button>
+    <button id="sendButton">发送</button>
 </div>
 <div>
     <button id="connect" onclick="connect();">连接</button>

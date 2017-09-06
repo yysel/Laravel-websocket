@@ -3,6 +3,8 @@
 namespace Kitty\WebSocket\Socket;
 
 
+use App\Jobs\Timer;
+
 class WebSocket
 {
     public $console;
@@ -11,6 +13,7 @@ class WebSocket
     public $users = [];
     public $count = 0;
     public $master;
+    public $timers = [];
 
     public $except = [];
     public $method_array = [
@@ -25,6 +28,8 @@ class WebSocket
         error_reporting(0);
         set_time_limit(0);
         ob_implicit_flush();
+       // $timer = new Timer;
+        //$this->timers = $timer->getTimer();
         $this->console = $config['console'];
         $this->master = $this->connect($config['address'], $config['port']);
         $this->sockets = array('s' => $this->master);
@@ -40,8 +45,17 @@ class WebSocket
         return $server;
     }
 
+    public function dd()
+    {
+        var_dump(time());
+    }
+
     public function read()
     {
+
+        if ($this->timers) {
+            if($this->checkTimer()>0) return new Frame('timer');;
+        };
         $changes = $this->sockets;
         @socket_select($changes, $write = NULL, $except = NULL, NULL);
         foreach ($changes as $k => $sign) {
@@ -65,7 +79,7 @@ class WebSocket
             } else {
                 $len = socket_recv($sign, $buffer, 2048, 0);
                 $k = $this->search($sign);
-                if ($len < 7 && $this->users[$k]['type']=='user') {
+                if ($len < 7 && $this->users[$k]['type'] == 'user') {
                     $this->close($sign);
                     return new Frame('out', $k, $sign);
                 }
@@ -265,7 +279,7 @@ class WebSocket
                 $data = $this->show();
                 break;
             case 'close':
-                if($param=='-ip') $this->closeByIp($param_two);
+                if ($param == '-ip') $this->closeByIp($param_two);
                 else $this->close($param);
                 break;
             default :
@@ -293,6 +307,20 @@ class WebSocket
             return collect($it)->only(['key', 'ip', 'type']);
         })->values()->toArray();
 
+    }
+
+
+    protected function checkTimer()
+    {
+        $num=0;
+        foreach ($this->timers as $timer) {
+            if ($timer['time'] <= time()) {
+                $func = $timer['func'];
+                $func($this);
+                $num++;
+            };
+        }
+        return $num;
     }
 
     public function console($msg)

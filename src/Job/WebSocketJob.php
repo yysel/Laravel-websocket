@@ -116,4 +116,8 @@ class WebSocketJob extends Job implements JobContract
         $this->socket->console($msg);
     }
 
+    public function registerTimer($time,$func)
+    {
+        $this->socket->registerTimer($time,$func);
+    }
 }

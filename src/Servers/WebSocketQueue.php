@@ -36,18 +36,7 @@ class WebSocketQueue implements QueueContract
         $this->container = $container;
     }
 
-    public function bulk($jobs, $data = '', $queue = null)
-    {
 
-    }
-
-
-    public function size($queue = null)
-    {
-        return (int)$this->sqs->getQueueAttributes([
-            'QueueUrl' => $this->getQueue($queue),
-        ])->get('ApproximateNumberOfMessages');
-    }
 
 
 
@@ -68,19 +57,6 @@ class WebSocketQueue implements QueueContract
         return $this->pushRaw($payload, $queue, $this->makeDelayHeader($delay));
     }
 
-
-    public function pushRaw($payload, $queue = null, array $options = [])
-    {
-
-    }
-
-
-    public function recreate($payload, $queue = null, $delay)
-    {
-        return $this->pushRaw($payload, $queue, $this->makeDelayHeader($delay));
-    }
-
-
     public function later($delay, $job, $data = '', $queue = null)
     {
         $payload = $this->createPayload($job, $data, $queue);
@@ -91,37 +67,8 @@ class WebSocketQueue implements QueueContract
     {
         $job = $this->socket->read();
         if (!is_null($job) && $job instanceof Frame) {
-           if(class_exists('\App\Jobs\WebSocketJob',true)) return new \App\Jobs\WebSocketJob($this->socket, $job);
-           return new  WebSocketJob($this->socket, $job);
-        }
-    }
-
-
-    public function deleteMessage($queue, Frame $message)
-    {
-        $this->getStomp()->ack($message);
-    }
-
-
-    public function getQueue($queue)
-    {
-        return $queue ?: $this->default;
-    }
-
-    public function getSocket()
-    {
-        return $this->socket;
-    }
-
-
-    protected function makeDelayHeader($delay)
-    {
-
-        $delay = $this->getSeconds($delay);
-        if ($this->system == self::SYSTEM_ACTIVEMQ) {
-            return ['AMQ_SCHEDULED_DELAY' => $delay * 1000];
-        } else {
-            return [];
+            if(class_exists('\App\Jobs\WebSocketJob',true)) return new \App\Jobs\WebSocketJob($this->socket, $job);
+            return new  WebSocketJob($this->socket,$job);
         }
     }
 
@@ -133,7 +80,23 @@ class WebSocketQueue implements QueueContract
 
     public function setConnectionName($name)
     {
-
         return $this;
     }
+
+    public function bulk($jobs, $data = '', $queue = null)
+    {
+
+    }
+
+
+    public function size($queue = null)
+    {
+
+    }
+
+    public function pushRaw($payload, $queue = null, array $options = [])
+    {
+
+    }
+
 }
