@@ -14,7 +14,7 @@ class WebSocket
     public $count = 0;
     public $master;
     public $timers = [];
-
+    public $code_key;
     public $except = [];
     public $method_array = [
         'send', 'broadcast', 'close'
@@ -28,9 +28,10 @@ class WebSocket
         error_reporting(0);
         set_time_limit(0);
         ob_implicit_flush();
-       // $timer = new Timer;
+        // $timer = new Timer;
         //$this->timers = $timer->getTimer();
         $this->console = $config['console'];
+        $this->code_key = env('APP_KEY', 'base64:4buUjgZDzAwk7y6vJPV6FLpihNOuqDJLocKdRRDHS38=');
         $this->master = $this->connect($config['address'], $config['port']);
         $this->sockets = array('s' => $this->master);
     }
@@ -53,9 +54,9 @@ class WebSocket
     public function read()
     {
 
-        if ($this->timers) {
-            if($this->checkTimer()>0) return new Frame('timer');;
-        };
+//        if ($this->timers) {
+//            if($this->checkTimer()>0) return new Frame('timer');;
+//        };
         $changes = $this->sockets;
         @socket_select($changes, $write = NULL, $except = NULL, NULL);
         foreach ($changes as $k => $sign) {
@@ -79,7 +80,7 @@ class WebSocket
             } else {
                 $len = socket_recv($sign, $buffer, 2048, 0);
                 $k = $this->search($sign);
-                if ($len < 7 && $this->users[$k]['type'] == 'user') {
+                if ($len < 7) {
                     $this->close($sign);
                     return new Frame('out', $k, $sign);
                 }
@@ -93,7 +94,12 @@ class WebSocket
                     return new Frame('in', $k, $sign);
                 } else {
                     if ($this->users[$k]['type'] == 'admin') {
-                        return $this->manager('admin', $k, $sign, $buffer);
+                        $buffer = $this->admin_decode($buffer);
+                        if (is_array($buffer)) {
+                            foreach ($buffer as $buf) $this->manager('admin', $k, $sign, $buf);
+                            return false;
+                        } else return $this->manager('admin', $k, $sign, $buffer);
+
                     }
                     $buffer = $this->decode($buffer);
                     return new Frame('msg', $k, $sign, $buffer);
@@ -150,7 +156,8 @@ class WebSocket
 
     protected function isAdmin($buffer)
     {
-        $key = env('APP_KEY', 'base64:4buUjgZDzAwk7y6vJPV6FLpihNOuqDJLocKdRRDHS38=');
+        $key = $this->code_key;
+        $buffer = $this->admin_decode($buffer);
         if ($buffer == "Order-Master-Key_Handing-|" . $key) return true;
         return false;
     }
@@ -165,7 +172,7 @@ class WebSocket
         $new_message .= "Sec-WebSocket-Version: 13\r\n";
         $new_message .= "Connection: Upgrade\r\n";
         $new_message .= "Sec-WebSocket-Accept: " . $new_key . "\r\n\r\n";
-        socket_write($this->users[$k]['socket'], $new_message, strlen($new_message));
+        socket_send($this->users[$k]['socket'], $new_message, strlen($new_message), 0);
         $this->users[$k]['hand'] = true;
         return true;
     }
@@ -241,18 +248,19 @@ class WebSocket
             return false;
         }
         $msg = $this->encode($msg);
-        return socket_write($this->users[$id]['socket'], $msg, strlen($msg));
+        return socket_send($this->users[$id]['socket'], $msg, strlen($msg), 0);
     }
 
     public function send($socket, $msg)
     {
         $msg = $this->encode($msg);
-        return socket_write($socket, $msg, strlen($msg));
+        return socket_send($socket, $msg, strlen($msg), 0);
     }
 
     public function sendToAdmin($socket, $buffer)
     {
-        return socket_write($socket, $buffer, strlen($buffer));
+        $buffer = $this->admin_encode($buffer);
+        return socket_send($socket, $buffer, strlen($buffer), 0);
     }
 
     public function broadcast($msg)
@@ -266,6 +274,7 @@ class WebSocket
 
     protected function manager($type, $key, $socket, $buffer)
     {
+        var_dump($buffer);
         $order = $this->enOrder($buffer);
         $method = reset($order);
         $param = next($order);
@@ -279,8 +288,11 @@ class WebSocket
                 $data = $this->show();
                 break;
             case 'close':
-                if ($param == '-ip') $this->closeByIp($param_two);
+                if ($param == '--ip') $this->closeByIp($param_two);
                 else $this->close($param);
+                break;
+            case 'exit':
+                $this->close($socket);
                 break;
             default :
                 $method = 'null';
@@ -290,8 +302,9 @@ class WebSocket
             'type' => $method,
             'data' => $data,
         ];
-        $this->sendToAdmin($socket, json_encode($msg));
-        return false;
+        if ($method == 'exit' || $param_two == '--silent') return false;
+        else $this->sendToAdmin($socket, json_encode($msg));
+
     }
 
     protected function enOrder($buffer)
@@ -300,6 +313,26 @@ class WebSocket
         foreach ($buffer as $key => $item) if (empty($item)) unset($buffer[$key]);
         return $buffer;
     }
+
+    public function admin_encode($buffer)
+    {
+        return json_encode(['code' => $this->code_key, 'order' => $buffer]);
+    }
+
+    public function admin_decode($buffer)
+    {
+        $buffers = explode("\r\n", $buffer);
+        $order_list = [];
+        foreach ($buffers as $buffer) {
+            if ($buffer) {
+                $buffer = json_decode($buffer);
+                $order_list[] = $buffer->order;
+            }
+        }
+        if (count($order_list) < 2) return $order_list[0];
+        else return $order_list;
+    }
+
 
     public function show()
     {
@@ -312,7 +345,7 @@ class WebSocket
 
     protected function checkTimer()
     {
-        $num=0;
+        $num = 0;
         foreach ($this->timers as $timer) {
             if ($timer['time'] <= time()) {
                 $func = $timer['func'];

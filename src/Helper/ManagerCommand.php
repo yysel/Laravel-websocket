@@ -46,7 +46,10 @@ class ManagerCommand extends Com
         $status=true;
         while (true) {
             $switch = $this->ask($this->out($notice));
-            if ($switch == '\q') break;
+            if ($switch == 'exit' ||$switch == '\q'){
+                $manager->send('exit');
+                break;
+            }
             if(!$status) break;
             $manager->send($this->in($switch));
             $status=$this->sayToSocket($manager);

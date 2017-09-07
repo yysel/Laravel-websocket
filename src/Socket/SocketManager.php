@@ -44,7 +44,21 @@ class SocketManager
 
     public function send($buffer)
     {
-        return socket_write($this->socket, $buffer, strlen($buffer));
+        $buffer = $this->encode($buffer);
+        return socket_send($this->socket, $buffer, strlen($buffer), 0);
+    }
+
+
+    public function encode($buffer)
+    {
+        $buffer = json_encode(['code' => $this->key, 'order' => $buffer]);
+        return $buffer."\r\n";
+    }
+
+    public function decode($buffer)
+    {
+        $buffer = json_decode($buffer);
+        return @$buffer->order;
     }
 
     protected function handshake()
@@ -52,7 +66,8 @@ class SocketManager
 
         while (true) {
             socket_recv($this->socket, $buffer, 2048, 0);
-            if($buffer=='OK') break;
+            $buffer = $this->decode($buffer);
+            if ($buffer == 'OK') break;
         }
         return true;
     }
@@ -60,11 +75,23 @@ class SocketManager
     public function read()
     {
         while (true) {
-            if(socket_last_error($this->socket))return null;
+            if (socket_last_error($this->socket)) return null;
             socket_recv($this->socket, $buffer, 2048, 0);
-            if($buffer)return $buffer;
+            if ($buffer) {
+                $buffer = $this->decode($buffer);
+                return $buffer;
+            }
         }
     }
 
+    public function broadcast($massage)
+    {
+        $this->send("broadcast " . $massage . " --silent");
+    }
+
+    public function close()
+    {
+        $this->send('exit');
+    }
 
 }
