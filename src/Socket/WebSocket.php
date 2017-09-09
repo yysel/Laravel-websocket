@@ -16,6 +16,7 @@ class WebSocket
     public $timers = [];
     public $code_key;
     public $except = [];
+    public $current_users;
     public $method_array = [
         'send', 'broadcast', 'close'
     ];
@@ -69,6 +70,7 @@ class WebSocket
                 $this->sockets[] = $client;
                 $user = array(
                     'key' => $this->count,
+                    'uuid' => guid(),
                     'socket' => $client,
                     'hand' => false,
                     'ip' => $client_ip['ip'],
@@ -82,7 +84,7 @@ class WebSocket
                 $k = $this->search($sign);
                 if ($len < 7) {
                     $this->close($sign);
-                    return new Frame('out', $k, $sign);
+                    return new Frame('out', $this->users[$k]);
                 }
                 if (!$this->users[$k]['hand']) {//没有握手进行握手
                     if ($res = $this->isAdmin($buffer)) {
@@ -91,7 +93,7 @@ class WebSocket
                         $this->users[$k]['hand'] = true;
                         $this->sendToAdmin($sign, 'OK');
                     } else $this->handshake($k, $buffer);
-                    return new Frame('in', $k, $sign);
+                    return new Frame('in', $this->users[$k]);
                 } else {
                     if ($this->users[$k]['type'] == 'admin') {
                         $buffer = $this->admin_decode($buffer);
@@ -99,16 +101,14 @@ class WebSocket
                             foreach ($buffer as $buf) $this->manager('admin', $k, $sign, $buf);
                             return false;
                         } else return $this->manager('admin', $k, $sign, $buffer);
-
                     }
                     $buffer = $this->decode($buffer);
-                    return new Frame('msg', $k, $sign, $buffer);
+                    return new Frame('msg', $this->users[$k], $buffer);
                 }
 
             }
         }
     }
-
 
     public function checkSocket($client)
     {
@@ -120,12 +120,14 @@ class WebSocket
         ];
     }
 
-    public function search($sign)
-    {//通过标示遍历获取id
-        foreach ($this->users as $k => $v) {
-            //var_dump($this->users);
-            if ($sign == $v['socket'])
-                return $k;
+    /**
+     *通过socket遍历获取id
+     */
+    public function search($socket)
+    {
+        foreach ($this->users as $key => $user) {
+            if ($socket == $user['socket'])
+                return $user['key'];
         }
         return false;
     }
@@ -244,17 +246,37 @@ class WebSocket
     //通过id推送信息
     public function sendBykey($id, $msg)
     {
-        if (!$this->users[$id]['socket']) {
-            return false;
-        }
+        if (!$this->users[$id]['socket']) return false;
         $msg = $this->encode($msg);
+        var_dump($this->users[$id]['uuid']);
         return socket_send($this->users[$id]['socket'], $msg, strlen($msg), 0);
     }
 
-    public function send($socket, $msg)
+    /**
+     *发送消息至
+     */
+    public function send($msg)
+    {
+        return $this->current_users->map(function ($user) use ($msg) {
+            $this->sendBySocket($user['socket'], $msg);
+            return $user['key'];
+        });
+    }
+
+    public function sendBySocket($socket, $msg)
     {
         $msg = $this->encode($msg);
-        return socket_send($socket, $msg, strlen($msg), 0);
+        return @socket_send($socket, $msg, strlen($msg), 0);
+    }
+
+    /**
+     *通过条件过滤当前链接用户并存放至发送站
+     */
+    public function where($key, $value_one, $value_two = null)
+    {
+        if ($value_two) $this->current_users = collect($this->users)->where($key, $value_one, $value_two);
+        else $this->current_users = collect($this->users)->where($key, $value_one);
+        return $this;
     }
 
     public function sendToAdmin($socket, $buffer)
@@ -267,51 +289,79 @@ class WebSocket
     {
         foreach ($this->users as $user) {
             if (@$user['socket'] && $user['type'] !== 'admin') {
-                $this->send(@$user['socket'], $msg);
+                $this->sendBySocket(@$user['socket'], $msg);
             }
         }
     }
 
     protected function manager($type, $key, $socket, $buffer)
     {
-        var_dump($buffer);
-        $order = $this->enOrder($buffer);
-        $method = reset($order);
-        $param = next($order);
-        $param_two = next($order);
+        $orderArray = $this->enOrder($buffer);
+        $order = $orderArray['order'];
+        $param = $orderArray['param'];
+        $extra = $orderArray['extra'];
+        $option = $orderArray['option'];
         $data = '';
-        switch ($method) {
+        switch ($order) {
             case 'broadcast':
-                $this->broadcast($param);
+                $this->broadcast($param[0]);
                 break;
             case 'show':
                 $data = $this->show();
                 break;
             case 'close':
-                if ($param == '--ip') $this->closeByIp($param_two);
-                else $this->close($param);
+                if (array_key_exists('--ip', $extra)) $this->closeByIp($extra['--ip']);
+                else $this->close($param[0]);
                 break;
             case 'exit':
                 $this->close($socket);
                 break;
+            case 'send';
+                if (array_key_exists('--k', $extra)) $this->sendBykey($extra['--k'], $param[0]);
+                elseif (array_key_exists('--uuid', $extra)) $this->where('uuid', $extra['--uuid'])->send($param[0]);
+                elseif (array_key_exists('--ip', $extra)) $this->where('ip', $extra['--ip'])->send($param[0]);
+                elseif (array_key_exists('--t', $extra)) $this->where('type', $extra['--t'])->send($param[0]);
+                else $this->sendBykey($param[0], $param[1]);
+                break;
             default :
-                $method = 'null';
+                $order = 'null';
                 break;
         }
         $msg = [
-            'type' => $method,
+            'type' => $order,
             'data' => $data,
         ];
-        if ($method == 'exit' || $param_two == '--silent') return false;
+        if ($order == 'exit' || array_key_exists('-s', $option)) return false;
         else $this->sendToAdmin($socket, json_encode($msg));
-
     }
 
+
+    /**
+     *解码指令
+     * order=[
+     *      'order' //指令
+     *      'param' //指令参数
+     *      'extra'=>[额外指令码参数] //额外指令码
+     *      'option'   //选项
+     *  ]
+     */
     protected function enOrder($buffer)
     {
         $buffer = explode(' ', $buffer);
-        foreach ($buffer as $key => $item) if (empty($item)) unset($buffer[$key]);
-        return $buffer;
+        $is_first = true;
+        $order = [];
+        foreach ($buffer as $key => $item) {
+            if (empty($item)) continue;
+            else if ($is_first) {
+                $order['order'] = $item;
+                $is_first = false;
+            } elseif (substr($item, 0, 1) === '-') {
+                if (substr($item, 0, 2) === '--') $order['extra'][$item] = [];
+                else $order['option'][] = $item;
+            } elseif (substr($buffer[$key - 1], 0, 2) === '--') $order['extra'][$buffer[$key - 1]] = $item;
+            else $order['param'][] = $item;
+        }
+        return $order;
     }
 
     public function admin_encode($buffer)
@@ -333,15 +383,13 @@ class WebSocket
         else return $order_list;
     }
 
-
     public function show()
     {
         return collect($this->users)->map(function ($it) {
-            return collect($it)->only(['key', 'ip', 'type']);
+            return collect($it)->only(['key', 'uuid', 'ip', 'type']);
         })->values()->toArray();
 
     }
-
 
     protected function checkTimer()
     {

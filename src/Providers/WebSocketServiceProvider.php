@@ -12,7 +12,10 @@ use Kitty\WebSocket\Servers\WebSocketConnector;
 class WebSocketServiceProvider extends ServiceProvider
 {
 
+
     protected $defer = false;
+    //protected $package_path = 'vendor/kitty/websocket';
+    protected $package_path = 'package';
 
 
     /**
@@ -22,6 +25,7 @@ class WebSocketServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        require(base_path($this->package_path . '/src/Helper/functions.php'));
         $manager = $this->app['queue'];
         $this->registerWebSocketConnector($manager);
         $this->registerRoute();

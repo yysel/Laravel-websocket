@@ -62,7 +62,7 @@ class ManagerCommand extends Com
             $res= json_decode($buffer,true);
             switch ($res['type']){
                 case 'show':
-                    $arr=['key','ip','type'];
+                    $arr=['ID','UUID','IP',$this->out('类型')];
                     $this->table($arr, $res['data']);
                     break;
                 default :
@@ -78,7 +78,6 @@ class ManagerCommand extends Com
     {
         if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') return $str;
         return iconv("UTF-8", "GBK", $str);
-
     }
 
     public function in($str)
