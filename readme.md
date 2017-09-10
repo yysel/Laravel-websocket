@@ -9,7 +9,7 @@
 
 （4）全局通信组件，使WebSocket服务与Http服务完美结合
 
-
+​	
 
 ## 一、安装与配置： 
 
@@ -45,7 +45,7 @@
  ]
 ```
 
-
+​	
 
 ## 二、开启服务
 
@@ -57,7 +57,7 @@
 
 ​	测试：kitty/websocket 提供了一个简单的demo 开启服务成功后可以在浏览器访问localhost/kitty/websocket/demo 进行测试
 
-
+​	
 
 ## 三、创建事件响应器
 
@@ -65,7 +65,7 @@
 
 ​	2、你可以通过命令`php artisan socket:make job` 来快速的在app/Jobs目录下创建事件处理类`WebSocketJob` ,`kitty/websocket`已经为你解决了继承关系，并生成了示例代码。
 
-
+​	
 
 ## 四、事件响应
 
@@ -111,11 +111,11 @@ close 12						   //关闭id为12的用户连接
 close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 ```
 
-
+​	
 
 ## 六、API
 
-（一）Socket API (只能在事件响应器（\App\Job\WebSocketJob）中使用)
+#### （一）Socket API (只能在事件响应器（\App\Job\WebSocketJob）中使用)
 
 ​	1、where(  $key,$ $value1$,  $[value2]$ )  //筛选指定条件的用户放置于用户栈；通常配合send(),close()使用方法与Laravel Collection的where一致
 
@@ -168,7 +168,7 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 
 ​		type	//(string)用户类型 
 
-（二）Globle API（在全文使用，由SocketManager提供）
+#### （二）Globle API（在全文使用，由SocketManager提供）
 
 ​	上文的第五条中介绍了SocketManager指令发送，除了在命令行中输入指令，还可以调用`Kitty\WebSocket\SocketManager` 中的send()方法向服务进程发送一条指令，实现在任何场景下与服务进程通信，send只接受一个字符串参数作为指令码，指令码的写法上文中已经介绍，这里不再赘述。
 
