@@ -154,22 +154,20 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 
 ​	10、默认用户属性 :
 
-​		```
-
 ```php
-		id  		//(int)用户ID
+	id  		//(int)用户ID
 
-		uuid		//(string)用户UUID
+	uuid		//(string)用户UUID
 
-		socket     	//(resourse)用户连接套字
+	socket     	//(resourse)用户连接套字
 
-		hand   		//(bool)是否握手
+	hand   		//(bool)是否握手
 
-		ip			//(string)用户ip
+	ip			//(string)用户ip
 
-		port		//(int)用户连接端口
+	port		//(int)用户连接端口
 
-		type		//(string)用户类型 
+	type		//(string)用户类型 
 ```
 
 #### （二）Globle API（在全文使用，由SocketManager提供）
