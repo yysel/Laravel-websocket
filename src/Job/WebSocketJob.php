@@ -10,12 +10,13 @@ class WebSocketJob extends Job implements JobContract
 {
     protected $frame;
     protected $socket;
-
+    protected $user;
 
     public function __construct(WebSocket $socket, $frame)
     {
         $this->socket = $socket;
         $this->frame = $frame;
+        $this->user = $frame->user;
     }
 
     /**
@@ -49,20 +50,20 @@ class WebSocketJob extends Job implements JobContract
      */
     public function login()
     {
-        $this->console('用户id ' . $this->frame->key . ' : 进入频道');
-        $this->broadcast('用户id ' . $this->frame->key . ': 进入频道');
+        $this->console('用户id ' . $this->user->key . ' : 进入频道');
+        $this->broadcast('用户id ' . $this->user->key . ': 进入频道');
     }
 
     public function logout()
     {
-        $this->console('用户id ' . $this->frame->key . ' : 退出频道');
-        $this->broadcast('用户id ' . $this->frame->key . ': 退出频道');
+        $this->console('用户id ' . $this->user->key . ' : 退出频道');
+        $this->broadcast('用户id ' . $this->user->key . ': 退出频道');
     }
 
     public function massage()
     {
-        $this->broadcast('用户id ' . $this->frame->key . ' 消息: ' . $this->frame->message);
-        $this->console('用户id ' . $this->frame->key . ' 消息: ' . $this->frame->message);
+        $this->broadcast('用户id ' . $this->user->key . ' 消息: ' . $this->frame->message);
+        $this->console('用户id ' . $this->user->key . ' 消息: ' . $this->frame->message);
     }
 
     public function manager()
@@ -116,8 +117,8 @@ class WebSocketJob extends Job implements JobContract
         $this->socket->console($msg);
     }
 
-    public function registerTimer($time,$func)
+    public function registerTimer($time, $func)
     {
-        $this->socket->registerTimer($time,$func);
+        $this->socket->registerTimer($time, $func);
     }
 }

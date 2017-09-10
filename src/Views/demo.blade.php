@@ -26,7 +26,7 @@
                 log("现已连接");
                 return ;
             }
-            url = "ws://192.168.1.116:2000";
+            url = "ws://{{ config('websocket.address') }}:{{ config('websocket.port') }}";
             if ('WebSocket' in window) {
                 ws = new WebSocket(url);
             } else if ('MozWebSocket' in window) {

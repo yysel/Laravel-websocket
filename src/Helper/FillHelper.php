@@ -21,8 +21,8 @@ class WebSocketJob extends Job
      */
     public function login()
     {
-        \$this->console('用户id ' . \$this->frame->key . ' : 进入频道');
-        \$this->broadcast('用户id ' . \$this->frame->key . ': 进入频道');
+        \$this->console('用户id ' . \$this->user->id . ' : 进入频道');
+        \$this->broadcast('用户id ' . \$this->user->id . ': 进入频道');
     }
 
     /**
@@ -30,8 +30,8 @@ class WebSocketJob extends Job
      */
     public function logout()
     {
-        \$this->console('用户id ' . \$this->frame->key . ' : 退出频道');
-        \$this->broadcast('用户id ' . \$this->frame->key . ': 退出频道');
+        \$this->console('用户id ' . \$this->user->id . ' : 退出频道');
+        \$this->broadcast('用户id ' . \$this->user->id . ': 退出频道');
     }
 
     /**
@@ -39,8 +39,8 @@ class WebSocketJob extends Job
      */
     public function massage()
     {
-        \$this->broadcast('用户id ' . \$this->frame->key . ' 消息: ' . \$this->frame->message);
-        \$this->console('用户id ' . \$this->frame->key . ' 消息: ' . \$this->frame->message);
+        \$this->broadcast('用户id ' . \$this->user->id . ' 消息: ' . \$this->frame->message);
+        \$this->console('用户id ' . \$this->user->id . ' 消息: ' . \$this->frame->message);
     }
 
     /**
@@ -65,7 +65,7 @@ CON;
 
     public function makeJob()
     {
-        $path =base_path('app/Jobs/WebSocketJob.php') ;
+        $path = base_path('app/Jobs/WebSocketJob.php');
         $file = fopen($path, $mode = 'w');
         return fwrite($file, self::WebSocketJob);
     }

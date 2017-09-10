@@ -11,10 +11,10 @@ class Frame
     public $user;
     public $message;
 
-    function __construct($type, $user, $message=null)
+    function __construct($type, $user, $message = null)
     {
         $this->type = $type;
-        $this->user = $user;
+        $this->user = (object)$user;
         //$this->key = $key;
         //$this->socket = $socket;
         $this->message = $message;
