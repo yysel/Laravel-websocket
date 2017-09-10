@@ -168,7 +168,7 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 
 ​		type	//(string)用户类型 
 
-（二）Globle API（在全文使用，有SocketManager提供）
+（二）Globle API（在全文使用，由SocketManager提供）
 
 ​	上文的第五条中介绍了SocketManager指令发送，除了在命令行中输入指令，还可以调用`Kitty\WebSocket\SocketManager` 中的send()方法向服务进程发送一条指令，实现在任何场景下与服务进程通信，send只接受一个字符串参数作为指令码，指令码的写法上文中已经介绍，这里不再赘述。
 

@@ -89,9 +89,14 @@ class WebSocketJob extends Job implements JobContract
     }
 
     //关闭一个连接
-    public function close($socket)
+    public function close()
     {
-        $this->socket->closeByIdOrSocket($socket);
+        $this->socket->close();
+    }
+
+    public function send($msg)
+    {
+        $this->socket->send($msg);
     }
 
     //通过key获取一个连接的用户
@@ -99,6 +104,8 @@ class WebSocketJob extends Job implements JobContract
     {
         $this->socket->user($key);
     }
+
+
 
     //通过socket标识，向某个连接用户发送一条消息
     public function sendBySocket($scoket, $msg)
@@ -120,5 +127,25 @@ class WebSocketJob extends Job implements JobContract
     public function registerTimer($time, $func)
     {
         $this->socket->registerTimer($time, $func);
+    }
+
+    public function getAllUsers()
+    {
+        $this->socket->getAllUsers();
+    }
+
+    public function getCurrentUsers()
+    {
+        $this->socket->getCurrentUsers();
+    }
+
+    public function addAttributeToUser($id, Array $attr)
+    {
+        $this->socket->addAttributeToUser($id,$attr);
+    }
+
+    public function where($key,$value1,$value2)
+    {
+        $this->socket->where($key,$value1,$value2);
     }
 }
