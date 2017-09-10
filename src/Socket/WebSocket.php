@@ -58,7 +58,6 @@ class WebSocket
         $changes = $this->sockets;
         @socket_select($changes, $write = NULL, $except = NULL, NULL);
         foreach ($changes as $k => $sign) {
-            if ($this->count >= $this->max_conn) $this->closeByIdOrSocket($sign);
             if ($sign == $this->master) {
                 $client = socket_accept($this->master);
                 if (!($client_ip = $this->checkSocket($client))) {
@@ -85,12 +84,17 @@ class WebSocket
                     return new Frame('out', $this->users[$k]);
                 }
                 if (!$this->users[$k]['hand']) {//没有握手进行握手
-                    if ($res = $this->isAdmin($buffer)) {
+                    $is_admin=$this->isAdmin($buffer);
+
+                    if ($is_admin) {
                         $this->users[$k]['ip'] = '0.0.0.0';
                         $this->users[$k]['type'] = 'admin';
                         $this->users[$k]['hand'] = true;
                         $this->sendToAdmin($sign, 'OK');
-                    } else $this->handshake($k, $buffer);
+                    } else {
+                        if ( $this->count >= $this->max_conn ) $this->closeByIdOrSocket($sign);
+                        else $this->handshake($k, $buffer);
+                    }
                     return new Frame('in', $this->users[$k]);
                 } else {
                     if ($this->users[$k]['type'] == 'admin') {

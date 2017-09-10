@@ -25,10 +25,10 @@
 
 ```php
  return  [
-        'address'=>'192.168.1.114', //监听地址
-        'port'=>'2000',        		//监听端口
-   		'max_coon',				   //最大连接数
-        'console'=>true,			//是否开启控制台信息
+        'address' => env('SOCKET_ADDRESS', '127.0.0.1'), //监听地址
+        'port' => env('SOCKET_PORT', 2000),        		//监听端口
+   		'max_coon' => 50,				   //最大连接数
+        'console' => true,			//是否开启控制台信息
  ];
 ```
 
@@ -178,12 +178,12 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 	//示例场景说明：当有新的文章被发布的时候，向订阅该栏目的用户推送一条提示消息。
 	public function addArticle()
     {
-      	$res= Article::Ceate(['title'=>'这是一篇测试文章','category_id'=>10]);
-      	$users=$res->User::has('category',function($q){
+      	$res = Article::Ceate(['title' => '这是一篇测试文章','category_id' => 10]);
+      	$users = $res->User::has('category',function($q){
        	 	$q->where('id',10);
       	});
      	if($res) {
-        	$ma=new SocketManager;
+        	$ma = new SocketManager;
         	$ma->connect();
         	foreach($users as $user) $ma->send('send 您订阅的栏目有新文章发布 --id '.$user->id);
       	}

@@ -91,7 +91,7 @@ class WebSocketJob extends Job implements JobContract
     //关闭一个连接
     public function close($socket)
     {
-        $this->socket->close($socket);
+        $this->socket->closeByIdOrSocket($socket);
     }
 
     //通过key获取一个连接的用户
@@ -101,15 +101,15 @@ class WebSocketJob extends Job implements JobContract
     }
 
     //通过socket标识，向某个连接用户发送一条消息
-    public function send($scoket, $msg)
+    public function sendBySocket($scoket, $msg)
     {
-        $this->socket->write($scoket, $msg);
+        $this->socket->sendBySocket($scoket, $msg);
     }
 
     //通过key，向某连接用户发送一条消息
-    public function sendBykey($key, $msg)
+    public function sendById($key, $msg)
     {
-        $this->socket->idwrite($key, $msg);
+        $this->socket->sendById($key, $msg);
     }
 
     public function console($msg)
