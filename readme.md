@@ -101,7 +101,7 @@
 
 ​	进程管理控制台常用指令：
 
-```
+```php
 show user						   //以列表形式查看当前所有连接客户端
 send 发送内容 --id 12 				//向id为12的用户发送 
 send 发送内容 --ip 192.168.1.173	 //向ip为192.168.1.173所有连接用户发送信息
@@ -154,19 +154,23 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 
 ​	10、默认用户属性 :
 
-​		id  		//(int)用户ID
+​		```
 
-​		uuid	//(string)用户UUID
+```php
+		id  		//(int)用户ID
 
-​		socket     //(resourse)用户连接套字
+		uuid		//(string)用户UUID
 
-​		hand   	//(bool)是否握手
+		socket     	//(resourse)用户连接套字
 
-​		ip		//(string)用户ip
+		hand   		//(bool)是否握手
 
-​		port	//(int)用户连接端口
+		ip			//(string)用户ip
 
-​		type	//(string)用户类型 
+		port		//(int)用户连接端口
+
+		type		//(string)用户类型 
+```
 
 #### （二）Globle API（在全文使用，由SocketManager提供）
 
