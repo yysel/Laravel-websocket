@@ -25,10 +25,10 @@
 
 ```php
  return  [
-        'address' => env('SOCKET_ADDRESS', '127.0.0.1'), //监听地址
-        'port' => env('SOCKET_PORT', 2000),        		//监听端口
-   		'max_coon' => 50,				   //最大连接数
-        'console' => true,			//是否开启控制台信息
+        'address' => env('SOCKET_ADDRESS', '127.0.0.1'),        //监听地址
+        'port' => env('SOCKET_PORT', 2000),                     //监听端口
+        'max_coon' => 50,                                       //最大连接数
+        'console' => true,                                      //是否开启控制台信息
  ];
 ```
 
@@ -102,13 +102,13 @@
 ​	进程管理控制台常用指令：
 
 ```php
-show user						   //以列表形式查看当前所有连接客户端
-send 发送内容 --id 12 				//向id为12的用户发送 
-send 发送内容 --ip 192.168.1.173	 //向ip为192.168.1.173所有连接用户发送信息
-send 发送内容 --uuid xxx    		 //向uuid为xxx的用户发送消息
-broadcast 发送内容					//向当前所有用户发送消息
-close 12						   //关闭id为12的用户连接
-close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
+    show user                           //以列表形式查看当前所有连接客户端
+    send 发送内容 --id 12                //向id为12的用户发送 
+    send 发送内容 --ip 192.168.1.173     //向ip为192.168.1.173所有连接用户发送信息
+    send 发送内容 --uuid xxx             //向uuid为xxx的用户发送消息
+    broadcast 发送内容                   //向当前所有用户发送消息
+    close 12                            //关闭id为12的用户连接
+    close --ip 192.168.1.173            //关闭ip为192.168.1.173的所有用户
 ```
 
 ​	
@@ -126,19 +126,20 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 ​	上述几条用法示例 ：
 
 ```  php
-	// \App\Job\WebSocketJob
+    // \App\Job\WebSocketJob
 	
-	$this->where('ip','192.168.1.173')->send('连接将被关闭')->close();
+    $this->where('ip','192.168.1.173')->send('连接将被关闭')->close();
 ```
 
 ​	4、sendById( $id$, $message$ ) 				// 向指定id 发送信息
 
 ```php
-	// \App\Job\WebSocketJob
+    // \App\Job\WebSocketJob
+	
 
-	public function login()
+    public function login()
     {
-      $this->sendById($this->user->id,'欢迎进入！');
+        $this->sendById($this->user->id,'欢迎进入！');
     }
 ```
 
@@ -155,19 +156,19 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 ​	10、默认用户属性 :
 
 ```php
-	id  		//(int)用户ID
+	id          //(int)用户ID
 
-	uuid		//(string)用户UUID
+	uuid        //(string)用户UUID
 
-	socket     	//(resourse)用户连接套字
+	socket      //(resourse)用户连接套字
 
-	hand   		//(bool)是否握手
+	hand        //(bool)是否握手
 
-	ip			//(string)用户ip
+	ip          //(string)用户ip
 
-	port		//(int)用户连接端口
+	port        //(int)用户连接端口
 
-	type		//(string)用户类型 
+	type        //(string)用户类型 
 ```
 
 #### （二）Globle API（在全文使用，由SocketManager提供）
@@ -178,16 +179,16 @@ close --ip 192.168.1.173			//关闭ip为192.168.1.173的所有用户
 
 ```php
 	//示例场景说明：当有新的文章被发布的时候，向订阅该栏目的用户推送一条提示消息。
-	public function addArticle()
+    public function addArticle()
     {
-      	$res = Article::Ceate(['title' => '这是一篇测试文章','category_id' => 10]);
-      	$users = $res->User::has('category',function($q){
-       	 	$q->where('id',10);
-      	});
-     	if($res) {
-        	$ma = new SocketManager;
-        	$ma->connect();
-        	foreach($users as $user) $ma->send('send 您订阅的栏目有新文章发布 --id '.$user->id);
+        $res = Article::Ceate(['title' => '这是一篇测试文章','category_id' => 10]);
+        $users = $res->User::has('category',function($q){
+       	    $q->where('id',10);
+        });
+        if($res) {
+            $ma = new SocketManager;
+            $ma->connect();
+            foreach($users as $user) $ma->send('send 您订阅的栏目有新文章发布 --id '.$user->id);
       	}
     }
 ```
