@@ -65,6 +65,8 @@ CON;
 
     public function makeJob()
     {
+        $path_dir=base_path('app/Jobs');
+        if(!is_dir($path_dir)) mkdir($path_dir,0777);
         $path = base_path('app/Jobs/WebSocketJob.php');
         $file = fopen($path, $mode = 'w');
         return fwrite($file, self::WebSocketJob);
