@@ -80,11 +80,12 @@ class WebSocket
                 $len = socket_recv($sign, $buffer, 2048, 0);
                 $k = $this->search($sign);
                 if ($len < 7) {
+                    $user = $this->users[$k];
                     $this->closeByIdOrSocket($sign);
-                    return new Frame('out', $this->users[$k]);
+                    return new Frame('out', $user);
                 }
                 if (!$this->users[$k]['hand']) {//没有握手进行握手
-                    $is_admin=$this->isAdmin($buffer);
+                    $is_admin = $this->isAdmin($buffer);
 
                     if ($is_admin) {
                         $this->users[$k]['ip'] = '0.0.0.0';
@@ -92,7 +93,7 @@ class WebSocket
                         $this->users[$k]['hand'] = true;
                         $this->sendToAdmin($sign, 'OK');
                     } else {
-                        if ( $this->count >= $this->max_conn ) $this->closeByIdOrSocket($sign);
+                        if ($this->count >= $this->max_conn) $this->closeByIdOrSocket($sign);
                         else $this->handshake($k, $buffer);
                     }
                     return new Frame('in', $this->users[$k]);

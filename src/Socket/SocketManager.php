@@ -19,8 +19,8 @@ class SocketManager
     function __construct()
     {
         $this->key = env('APP_KEY', 'base64:4buUjgZDzAwk7y6vJPV6FLpihNOuqDJLocKdRRDHS38=');
-        $this->address = config('queue.connections.websocket.address', 'localhost');
-        $this->port = config('queue.connections.websocket.port', 2000);
+        $this->address = config('websocket.address', '127.0.0.1');
+        $this->port = config('websocket.port', 2000);
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
     }
 
