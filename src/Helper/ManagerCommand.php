@@ -42,7 +42,7 @@ class ManagerCommand extends Com
         $manager = new SocketManager();
         echo out("正在连接。。。");
         $manager->connect();
-        $notice="===================WebSocket进程控制台=========================";
+        $notice="======================WebSocket进程控制台=========================";
         $status=true;
         while (true) {
             $switch = $this->ask(out($notice));
