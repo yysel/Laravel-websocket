@@ -85,24 +85,24 @@ class WebSocketJob extends Job implements JobContract
     // 向所有频道广播
     public function broadcast($msg)
     {
-        $this->socket->broadcast($msg);
+        return $this->socket->broadcast($msg);
     }
 
     //关闭一个连接
     public function close()
     {
-        $this->socket->close();
+        return $this->socket->close();
     }
 
     public function send($msg)
     {
-        $this->socket->send($msg);
+        return  $this->socket->send($msg);
     }
 
     //通过key获取一个连接的用户
     public function user($key)
     {
-        $this->socket->user($key);
+        return $this->socket->user($key);
     }
 
 
@@ -110,13 +110,13 @@ class WebSocketJob extends Job implements JobContract
     //通过socket标识，向某个连接用户发送一条消息
     public function sendBySocket($scoket, $msg)
     {
-        $this->socket->sendBySocket($scoket, $msg);
+        return $this->socket->sendBySocket($scoket, $msg);
     }
 
     //通过key，向某连接用户发送一条消息
     public function sendById($key, $msg)
     {
-        $this->socket->sendById($key, $msg);
+        return $this->socket->sendById($key, $msg);
     }
 
     public function console($msg)
@@ -126,26 +126,26 @@ class WebSocketJob extends Job implements JobContract
 
     public function registerTimer($time, $func)
     {
-        $this->socket->registerTimer($time, $func);
+        return  $this->socket->registerTimer($time, $func);
     }
 
     public function getAllUsers()
     {
-        $this->socket->getAllUsers();
+        return  $this->socket->getAllUsers();
     }
 
     public function getCurrentUsers()
     {
-        $this->socket->getCurrentUsers();
+        return $this->socket->getCurrentUsers();
     }
 
     public function addAttributeToUser($id, Array $attr)
     {
-        $this->socket->addAttributeToUser($id,$attr);
+        return  $this->socket->addAttributeToUser($id,$attr);
     }
 
     public function where($key,$value1,$value2)
     {
-        $this->socket->where($key,$value1,$value2);
+        return  $this->socket->where($key,$value1,$value2);
     }
 }

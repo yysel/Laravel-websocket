@@ -206,11 +206,10 @@ class WebSocket
         return $this->current_users;
     }
 
-    public function addAttributeToUser($sign, $attr)
+    public function addAttributeToUser($id, $attr)
     {
-        $k = $this->search($sign);
-        if ($k) {
-            $this->users[$k][$attr[0]] = $attr[1];
+        if ($this->users[$id]) {
+            $this->users[$id] = array_merge($this->users[$id], $attr);
         }
     }
 

@@ -3,8 +3,8 @@
 
 namespace Kitty\WebSocket\Servers;
 
-use App\Jobs\WebSocketJob;
 use Illuminate\Contracts\Queue\Queue as QueueContract;
+use Kitty\WebSocket\Job\WebSocketJob as Job;
 use Kitty\WebSocket\Socket\Frame;
 use Kitty\WebSocket\Socket\WebSocket;
 
@@ -37,9 +37,6 @@ class WebSocketQueue implements QueueContract
     }
 
 
-
-
-
     public function push($job, $data = '', $queue = null)
     {
         return $this->pushRaw($this->createPayload($job, $data), $queue);
@@ -67,8 +64,8 @@ class WebSocketQueue implements QueueContract
     {
         $job = $this->socket->read();
         if (!is_null($job) && $job instanceof Frame) {
-            if(class_exists('\App\Jobs\WebSocketJob',true)) return new \App\Jobs\WebSocketJob($this->socket, $job);
-            return new  WebSocketJob($this->socket,$job);
+            if (class_exists('\App\Jobs\WebSocketJob', true)) return new \App\Jobs\WebSocketJob($this->socket, $job);
+            return new Job($this->socket, $job);
         }
     }
 
