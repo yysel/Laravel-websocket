@@ -416,7 +416,7 @@ class WebSocket
                 $func = $timer['func'];
                 $func($this);
                 $num++;
-            };
+            }
         }
         return $num;
     }
@@ -425,7 +425,7 @@ class WebSocket
     {
         if ($this->console) {
             $msg = $msg . "\r\n";
-            fwrite(STDOUT, iconv('utf-8', 'gbk//IGNORE', $msg));
+            fwrite(STDOUT, out($msg));
         }
     }
 }

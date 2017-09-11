@@ -45,3 +45,15 @@ function getLocalIP() {
     }
     return '127.0.0.1';
 }
+
+function out($str)
+{
+    if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') return $str;
+    return iconv("UTF-8", "GBK", $str);
+}
+
+function in($str)
+{
+    if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') return $str;
+    return iconv("GBK","UTF-8", $str);
+}
