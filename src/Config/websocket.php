@@ -8,5 +8,7 @@ return [
 
     'max_conn' => 50,
 
+    'manager'=>false,
+
     'console' => true,
 ];

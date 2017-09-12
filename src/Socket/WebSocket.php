@@ -6,15 +6,15 @@ namespace Kitty\WebSocket\Socket;
 class WebSocket
 {
     public $console;
-    public $event;
-    public $signets;
-    public $users = [];
-    public $count = 0;
+    public $clients = [[]];
+    public $count = 1;
+    public $sockets = [[]];
     public $master;
     public $timers = [];
     public $code_key;
+    public $manager;
     public $except = [];
-    public $current_users;
+    public $current_clients;
     protected $max_conn;
     public $method_array = [
         'send', 'broadcast', 'close'
@@ -32,6 +32,7 @@ class WebSocket
         //$this->timers = $timer->getTimer();
         $this->max_conn = $config['max_conn'];
         $this->console = $config['console'];
+        $this->manager = $config['manager'];
         $this->code_key = env('APP_KEY', 'base64:4buUjgZDzAwk7y6vJPV6FLpihNOuqDJLocKdRRDHS38=');
         $this->master = $this->connect($config['address'], $config['port']);
         $this->sockets = array('s' => $this->master);
@@ -65,48 +66,49 @@ class WebSocket
                     $this->closeByIdOrSocket($client);
                 }
                 $this->sockets[] = $client;
-                $user = array(
+                $client = array(
                     'id' => $this->count,
                     'uuid' => guid(),
                     'socket' => $client,
                     'hand' => false,
                     'ip' => $client_ip['ip'],
                     'port' => $client_ip['port'],
-                    'type' => 'user',
+                    'type' => 'client',
                 );
-                $this->users[$this->count] = $user;
+                $this->clients[$this->count] = $client;
                 $this->count++;
             } else {
                 $len = socket_recv($sign, $buffer, 2048, 0);
                 $k = $this->search($sign);
                 if ($len < 7) {
-                    $user = $this->users[$k];
+                    $client = $this->clients[$k];
                     $this->closeByIdOrSocket($sign);
-                    return new Frame('out', $user);
+                    return new Frame('out', $client);
                 }
-                if (!$this->users[$k]['hand']) {//没有握手进行握手
+                if (!$this->clients[$k]['hand']) {//没有握手进行握手
                     $is_admin = $this->isAdmin($buffer);
 
                     if ($is_admin) {
-                        $this->users[$k]['ip'] = '0.0.0.0';
-                        $this->users[$k]['type'] = 'admin';
-                        $this->users[$k]['hand'] = true;
+                        $this->clients[$k]['ip'] = '0.0.0.0';
+                        $this->clients[$k]['type'] = 'admin';
+                        $this->clients[$k]['hand'] = true;
                         $this->sendToAdmin($sign, 'OK');
                     } else {
                         if ($this->count >= $this->max_conn) $this->closeByIdOrSocket($sign);
                         else $this->handshake($k, $buffer);
                     }
-                    return new Frame('in', $this->users[$k]);
+                    return new Frame('in', $this->clients[$k]);
                 } else {
-                    if ($this->users[$k]['type'] == 'admin') {
+                    if ($this->clients[$k]['type'] == 'admin') {
                         $buffer = $this->admin_decode($buffer);
+                        if($this->manager) return new Frame('manager',$this->clients[$k],$buffer);
                         if (is_array($buffer)) {
-                            foreach ($buffer as $buf) $this->manager('admin', $k, $sign, $buf);
+                            foreach ($buffer as $buf) $this->manager('manager', $k, $sign, $buf);
                             return false;
-                        } else return $this->manager('admin', $k, $sign, $buffer);
+                        } else return $this->manager('manager', $k, $sign, $buffer);
                     }
                     $buffer = $this->decode($buffer);
-                    return new Frame('msg', $this->users[$k], $buffer);
+                    return new Frame('msg', $this->clients[$k], $buffer);
                 }
 
             }
@@ -128,9 +130,9 @@ class WebSocket
      */
     public function search($socket)
     {
-        foreach ($this->users as $key => $user) {
-            if ($socket == $user['socket'])
-                return $user['id'];
+        foreach ($this->clients as $key => $client) {
+            if ($socket == $client['socket'])
+                return $client['id'];
         }
         return false;
     }
@@ -146,24 +148,24 @@ class WebSocket
         }
         socket_close($socket);
         if ($this->sockets[$id]) unset($this->sockets[$id]);
-        if ($this->users[$id]) unset($this->users[$id]);
+        if ($this->clients[$id]) unset($this->clients[$id]);
         return true;
     }
 
 
     public function close()
     {
-        $this->current_users->map(function ($user) {
-            $this->closeByIdOrSocket($user['socket']);
+        $this->current_clients->map(function ($client) {
+            $this->closeByIdOrSocket($client['socket']);
         });
         return $this;
     }
 
     public function closeByIp($ip)
     {
-        $users = collect($this->users)->where('ip', '=', $ip)->toArray();
-        foreach ($users as $user) {
-            $this->closeByIdOrSocket($user['id']);
+        $clients = collect($this->clients)->where('ip', '=', $ip)->toArray();
+        foreach ($clients as $client) {
+            $this->closeByIdOrSocket($client['id']);
         }
         return true;
     }
@@ -186,30 +188,30 @@ class WebSocket
         $new_message .= "Sec-WebSocket-Version: 13\r\n";
         $new_message .= "Connection: Upgrade\r\n";
         $new_message .= "Sec-WebSocket-Accept: " . $new_key . "\r\n\r\n";
-        socket_send($this->users[$k]['socket'], $new_message, strlen($new_message), 0);
-        $this->users[$k]['hand'] = true;
+        socket_send($this->clients[$k]['socket'], $new_message, strlen($new_message), 0);
+        $this->clients[$k]['hand'] = true;
         return true;
     }
 
-    public function user($id)
+    public function client($id)
     {
-        return $this->users[$id];
+        return $this->clients[$id];
     }
 
-    public function getAllUsers()
+    public function getAllclients()
     {
-        return $this->users;
+        return $this->clients;
     }
 
-    public function getCurrentUsers()
+    public function getCurrentClients()
     {
-        return $this->current_users;
+        return $this->current_clients;
     }
 
-    public function addAttributeToUser($id, $attr)
+    public function addAttributeToClient($id, $attr)
     {
-        if ($this->users[$id]) {
-            $this->users[$id] = array_merge($this->users[$id], $attr);
+        if ($this->clients[$id]) {
+            $this->clients[$id] = array_merge($this->clients[$id], $attr);
         }
     }
 
@@ -262,9 +264,9 @@ class WebSocket
     //通过id推送信息
     public function sendById($id, $msg)
     {
-        if (!$this->users[$id]['socket']) return false;
+        if (!$this->clients[$id]['socket']) return false;
         $msg = $this->encode($msg);
-        return socket_send($this->users[$id]['socket'], $msg, strlen($msg), 0);
+        return socket_send($this->clients[$id]['socket'], $msg, strlen($msg), 0);
     }
 
     /**
@@ -272,8 +274,8 @@ class WebSocket
      */
     public function send($msg)
     {
-        $this->current_users->map(function ($user) use ($msg) {
-            $this->sendBySocket($user['socket'], $msg);
+        $this->current_clients->map(function ($client) use ($msg) {
+            $this->sendBySocket($client['socket'], $msg);
         });
         return $this;
     }
@@ -289,8 +291,8 @@ class WebSocket
      */
     public function where($key, $value_one, $value_two = null)
     {
-        if ($value_two) $this->current_users = collect($this->users)->where($key, $value_one, $value_two);
-        else $this->current_users = collect($this->users)->where($key, $value_one);
+        if ($value_two) $this->current_clients = collect($this->clients)->where($key, $value_one, $value_two);
+        else $this->current_clients = collect($this->clients)->where($key, $value_one);
         return $this;
     }
 
@@ -302,10 +304,10 @@ class WebSocket
 
     public function broadcast($msg)
     {
-        foreach ($this->users as $user) {
+        foreach ($this->clients as $client) {
 
-            if (@$user['socket'] && $user['type'] !== 'admin') {
-                $this->sendBySocket(@$user['socket'], $msg);
+            if (@$client['socket'] && $client['type'] !== 'admin') {
+                $this->sendBySocket(@$client['socket'], $msg);
             }
         }
     }
@@ -401,7 +403,7 @@ class WebSocket
 
     public function show()
     {
-        return collect($this->users)->map(function ($it) {
+        return collect($this->clients)->map(function ($it) {
             return collect($it)->only(['id', 'uuid', 'ip', 'type']);
         })->values()->toArray();
 

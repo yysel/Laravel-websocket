@@ -21,8 +21,8 @@ class WebSocketJob extends Job
      */
     public function login()
     {
-        \$this->console('用户id ' . \$this->user->id . ' : 进入频道');
-        \$this->broadcast('用户id ' . \$this->user->id . ': 进入频道');
+        \$this->console('用户id ' . \$this->client->id . ' : 进入频道');
+        \$this->broadcast('用户id ' . \$this->client->id . ': 进入频道');
     }
 
     /**
@@ -30,8 +30,8 @@ class WebSocketJob extends Job
      */
     public function logout()
     {
-        \$this->console('用户id ' . \$this->user->id . ' : 退出频道');
-        \$this->broadcast('用户id ' . \$this->user->id . ': 退出频道');
+        \$this->console('用户id ' . \$this->client->id . ' : 退出频道');
+        \$this->broadcast('用户id ' . \$this->client->id . ': 退出频道');
     }
 
     /**
@@ -39,8 +39,8 @@ class WebSocketJob extends Job
      */
     public function massage()
     {
-        \$this->broadcast('用户id ' . \$this->user->id . ' 消息: ' . \$this->frame->message);
-        \$this->console('用户id ' . \$this->user->id . ' 消息: ' . \$this->frame->message);
+        \$this->broadcast('用户id ' . \$this->client->id . ' 消息: ' . \$this->frame->message);
+        \$this->console('用户id ' . \$this->client->id . ' 消息: ' . \$this->frame->message);
     }
 
     /**

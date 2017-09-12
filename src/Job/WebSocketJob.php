@@ -10,13 +10,13 @@ class WebSocketJob extends Job implements JobContract
 {
     protected $frame;
     protected $socket;
-    protected $user;
+    protected $client;
 
     public function __construct(WebSocket $socket, $frame)
     {
         $this->socket = $socket;
         $this->frame = $frame;
-        $this->user = $frame->user;
+        $this->client = $frame->client;
     }
 
     /**
@@ -37,7 +37,7 @@ class WebSocketJob extends Job implements JobContract
             case 'msg':
                 return $this->massage();
                 break;
-            case 'admin':
+            case 'manager':
                 return $this->manager();
                 break;
         }
@@ -50,20 +50,20 @@ class WebSocketJob extends Job implements JobContract
      */
     public function login()
     {
-        $this->console('用户id ' . $this->user->key . ' : 进入频道');
-        $this->broadcast('用户id ' . $this->user->key . ': 进入频道');
+        $this->console('用户id ' . $this->client->key . ' : 进入频道');
+        $this->broadcast('用户id ' . $this->client->key . ': 进入频道');
     }
 
     public function logout()
     {
-        $this->console('用户id ' . $this->user->key . ' : 退出频道');
-        $this->broadcast('用户id ' . $this->user->key . ': 退出频道');
+        $this->console('用户id ' . $this->client->key . ' : 退出频道');
+        $this->broadcast('用户id ' . $this->client->key . ': 退出频道');
     }
 
     public function massage()
     {
-        $this->broadcast('用户id ' . $this->user->key . ' 消息: ' . $this->frame->message);
-        $this->console('用户id ' . $this->user->key . ' 消息: ' . $this->frame->message);
+        $this->broadcast('用户id ' . $this->client->key . ' 消息: ' . $this->frame->message);
+        $this->console('用户id ' . $this->client->key . ' 消息: ' . $this->frame->message);
     }
 
     public function manager()
@@ -100,9 +100,9 @@ class WebSocketJob extends Job implements JobContract
     }
 
     //通过key获取一个连接的用户
-    public function user($key)
+    public function client($key)
     {
-        return $this->socket->user($key);
+        return $this->socket->client($key);
     }
 
 
@@ -129,23 +129,28 @@ class WebSocketJob extends Job implements JobContract
         return  $this->socket->registerTimer($time, $func);
     }
 
-    public function getAllUsers()
+    public function getAllClients()
     {
-        return  $this->socket->getAllUsers();
+        return  $this->socket->getAllClients();
     }
 
-    public function getCurrentUsers()
+    public function getCurrentClients()
     {
-        return $this->socket->getCurrentUsers();
+        return $this->socket->getCurrentClients();
     }
 
-    public function addAttributeToUser($id, Array $attr)
+    public function addAttributeToClient($id, Array $attr)
     {
-        return  $this->socket->addAttributeToUser($id,$attr);
+        return  $this->socket->addAttributeToClient($id,$attr);
     }
 
     public function where($key,$value1,$value2)
     {
         return  $this->socket->where($key,$value1,$value2);
+    }
+
+    public function timeoutAt()
+    {
+        // TODO: Implement timeoutAt() method.
     }
 }
