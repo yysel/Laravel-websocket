@@ -41,10 +41,11 @@ class WebSocket
     public function connect($address, $port)
     {
         $server = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_set_option($server, SOL_SOCKET, SO_REUSEADDR, 1);
-        socket_bind($server, $address, $port);
-        socket_listen($server);
-        socket_set_nonblock($server);
+        $server or die(out('创建套接字失败'."\r\n"));
+//        socket_set_option($server, SOL_SOCKET, SO_REUSEADDR, 1) or die(out('监听失败' . $address . ' : ' . $port));
+        socket_bind($server, $address, $port) or die(out('监听失败：' . $address . ' : ' . $port."\r\n"));
+        socket_listen($server) or  die(out('监听失败: ' . $address . ' : ' . $port."\r\n"));
+        socket_set_nonblock($server)or die(out('监听失败：' . $address . ' : ' . $port."\r\n"));
         $this->console('开始监听: ' . $address . ' : ' . $port);
         return $server;
     }
@@ -146,8 +147,6 @@ class WebSocket
             $socket = $this->sockets[$sign]['socket'];
             $id = $sign;
         }
-        var_dump($socket);
-        var_dump($id);
         socket_close($socket);
         if ($this->sockets[$id]) unset($this->sockets[$id]);
         if ($this->clients[$id]) unset($this->clients[$id]);
@@ -424,12 +423,13 @@ class WebSocket
         return $num;
     }
 
-    public function console($msg)
+    public function console($msg,$force=false)
     {
-        if ($this->console) {
+        if ($this->console || $force) {
             $msg = $msg . "\r\n";
             fwrite(STDOUT, out($msg));
         }
+        return null;
     }
 }
 
