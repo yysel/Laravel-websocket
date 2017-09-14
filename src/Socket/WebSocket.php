@@ -35,7 +35,7 @@ class WebSocket
         $this->manager = $config['manager'];
         $this->code_key = env('APP_KEY', 'base64:4buUjgZDzAwk7y6vJPV6FLpihNOuqDJLocKdRRDHS38=');
         $this->master = $this->connect($config['address'], $config['port']);
-        $this->sockets = array('s' => $this->master);
+        $this->sockets['s'] = $this->master;
     }
 
     public function connect($address, $port)
@@ -146,6 +146,8 @@ class WebSocket
             $socket = $this->sockets[$sign]['socket'];
             $id = $sign;
         }
+        var_dump($socket);
+        var_dump($id);
         socket_close($socket);
         if ($this->sockets[$id]) unset($this->sockets[$id]);
         if ($this->clients[$id]) unset($this->clients[$id]);
